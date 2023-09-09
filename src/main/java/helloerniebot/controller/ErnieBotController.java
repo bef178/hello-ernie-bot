@@ -47,9 +47,10 @@ public class ErnieBotController {
             return Flux.just(fallbackResponse);
         }
 
-        ErnieBotHandlerContext context = new ErnieBotHandlerContext(request);
         try {
+            ErnieBotHandlerContext context = new ErnieBotHandlerContext(request);
             ernieBotHandler.execute(context);
+            return context.responseFlux;
         } catch (Exception e) {
             log.error("Failed to execute", e);
             ErnieBotControllerResponse fallbackResponse = new ErnieBotControllerResponse();
@@ -57,8 +58,6 @@ public class ErnieBotController {
             fallbackResponse.errorMessage = e.getMessage();
             return Flux.just(fallbackResponse);
         }
-
-        return context.responseFlux;
     }
 
     private void validateRequest(ErnieBotControllerRequest request) {
