@@ -41,16 +41,8 @@ public class ErnieBotController {
 
     private Flux<ErnieBotControllerResponse> execute(ErnieBotControllerRequest request) {
         try {
-            validateRequest(request);
-        } catch (IllegalArgumentException e) {
-            ErnieBotControllerResponse fallbackResponse = new ErnieBotControllerResponse();
-            fallbackResponse.errorCode = 400;
-            fallbackResponse.errorMessage = e.getMessage();
-            return Flux.just(fallbackResponse);
-        }
-
-        try {
             ErnieBotHandlerContext context = new ErnieBotHandlerContext(request);
+            validateRequest(request);
             return ernieBotHandler.execute(context).mapNotNull(answerParcel -> {
                 if (answerParcel == null) {
                     return null;
@@ -62,6 +54,12 @@ public class ErnieBotController {
                 response.trace = buildTrace(context, answerParcel);
                 return response;
             });
+        } catch (IllegalArgumentException e) {
+            log.info("Illegal argument");
+            ErnieBotControllerResponse fallbackResponse = new ErnieBotControllerResponse();
+            fallbackResponse.errorCode = 400;
+            fallbackResponse.errorMessage = e.getMessage();
+            return Flux.just(fallbackResponse);
         } catch (Exception e) {
             log.error("Failed to execute", e);
             ErnieBotControllerResponse fallbackResponse = new ErnieBotControllerResponse();
