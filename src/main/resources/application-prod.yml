@@ -1,0 +1,3 @@
+spring:
+  log:
+    home: /data/log

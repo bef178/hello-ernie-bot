@@ -1,0 +1,28 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: hello-ernie-bot
+  jackson:
+    default-property-inclusion: non_null
+  profiles:
+    active: local
+
+upstream-service:
+  ernie-bot:
+    token-url-template: "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}"
+    completions-url-template: "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token={access_token}"
+    client-id: "<client-id>"
+    client-secret: "<client-secret>"
+    access-token: "<access-token>"
+    pad:
+      head-delay: 2500
+      head-words: "hmmm..."
+      head-catch-delay: 1000
+      head-catch-words: "待会再聊吧"
+      next-delay: 1000
+      next-words: "errr..."
+      next-catch-delay: 1000
+      next-catch-words: "后面我忘了"
+

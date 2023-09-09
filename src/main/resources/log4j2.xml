@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="60">
+    <properties>
+        <property name="APP_NAME">${spring:spring.application.name:-app}</property>
+        <property name="LOG_HOME">${spring:spring.log.home:-./target/log}</property>
+        <property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %level - [%tid] %c{1.} - %msg%n</property>
+    </properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="false">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <RollingFile name="RollingInfo"
+                fileName="${LOG_HOME}/${APP_NAME}.log"
+                filePattern="${LOG_HOME}/${APP_NAME}_%d{yyyyMMdd-HH}-%i.log">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="200 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="nomax"/>
+        </RollingFile>
+        <RollingFile name="RollingTrace"
+                fileName="${LOG_HOME}/${APP_NAME}.trace.log"
+                filePattern="${LOG_HOME}/${APP_NAME}_trace_%d{yyyyMMdd-HH}-%i.log">
+            <ThresholdFilter level="TRACE" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="200 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="nomax"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="TRACE">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingInfo"/>
+            <AppenderRef ref="RollingTrace"/>
+        </Root>
+    </Loggers>
+</Configuration>

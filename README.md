@@ -1,5 +1,5 @@
 # Hello Ernie Bot
 
-A simple service to talk to Ernie Bot.
+A simple service talking to Ernie Bot.
 
-Using SpringBoot WebFlux.
+Using SpringBoot WebFlux. With Padding.
