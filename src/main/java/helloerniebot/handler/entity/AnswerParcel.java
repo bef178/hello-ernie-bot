@@ -14,9 +14,9 @@ public class AnswerParcel implements Serializable {
 
     public Boolean isEnd;
 
-    public ProxyTrace trace;
-
     public Integer errorCode;
 
     public String errorMessage;
+
+    public ProxyTrace trace;
 }

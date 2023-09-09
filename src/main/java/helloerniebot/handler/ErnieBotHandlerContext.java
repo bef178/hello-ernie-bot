@@ -4,19 +4,15 @@ import java.time.Instant;
 import java.util.List;
 
 import helloerniebot.controller.entity.ErnieBotControllerRequest;
-import helloerniebot.controller.entity.ErnieBotControllerResponse;
 import helloerniebot.mapper.entity.ErnieBotMessage;
-import reactor.core.publisher.Flux;
 
 public class ErnieBotHandlerContext {
 
-    public final Instant startTime;
+    private final Instant startTime;
 
-    Instant lastTime;
+    private Instant lastTime;
 
     public final ErnieBotControllerRequest request;
-
-    public Flux<ErnieBotControllerResponse> responseFlux;
 
     public List<ErnieBotMessage> messages;
 
@@ -27,5 +23,15 @@ public class ErnieBotHandlerContext {
 
     public long elapsed() {
         return Instant.now().toEpochMilli() - startTime.toEpochMilli();
+    }
+
+    public long elapsedSinceLastAndUpdate() {
+        if (lastTime == null) {
+            lastTime = startTime;
+        }
+        Instant now = Instant.now();
+        long elapsedSinceLast = now.toEpochMilli() - lastTime.toEpochMilli();
+        lastTime = now;
+        return elapsedSinceLast;
     }
 }

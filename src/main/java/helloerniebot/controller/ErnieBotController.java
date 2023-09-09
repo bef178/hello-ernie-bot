@@ -2,10 +2,13 @@ package helloerniebot.controller;
 
 import java.time.Instant;
 
+import helloerniebot.common.JsonUtil;
 import helloerniebot.controller.entity.ErnieBotControllerRequest;
 import helloerniebot.controller.entity.ErnieBotControllerResponse;
-import helloerniebot.handler.ErnieBotHandlerContext;
+import helloerniebot.controller.entity.ErnieBotTrace;
 import helloerniebot.handler.ErnieBotHandler;
+import helloerniebot.handler.ErnieBotHandlerContext;
+import helloerniebot.handler.entity.AnswerParcel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -13,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import helloerniebot.common.JsonUtil;
 
 @RestController
 @Slf4j
@@ -49,8 +51,17 @@ public class ErnieBotController {
 
         try {
             ErnieBotHandlerContext context = new ErnieBotHandlerContext(request);
-            ernieBotHandler.execute(context);
-            return context.responseFlux;
+            return ernieBotHandler.execute(context).mapNotNull(answerParcel -> {
+                if (answerParcel == null) {
+                    return null;
+                }
+                ErnieBotControllerResponse response = new ErnieBotControllerResponse();
+                response.answerText = answerParcel.answerText;
+                response.isPad = answerParcel.isPad;
+                response.isEnd = answerParcel.isEnd;
+                response.trace = buildTrace(context, answerParcel);
+                return response;
+            });
         } catch (Exception e) {
             log.error("Failed to execute", e);
             ErnieBotControllerResponse fallbackResponse = new ErnieBotControllerResponse();
@@ -72,5 +83,13 @@ public class ErnieBotController {
         if (request.queryText == null || request.queryText.isEmpty()) {
             throw new IllegalArgumentException("queryText should not be null or empty");
         }
+    }
+
+    private ErnieBotTrace buildTrace(ErnieBotHandlerContext context, AnswerParcel answer) {
+        ErnieBotTrace trace = new ErnieBotTrace();
+        trace.elapsed = context.elapsed();
+        trace.elapsedSinceLast = context.elapsedSinceLastAndUpdate();
+        trace.ernieBot = answer.trace;
+        return trace;
     }
 }

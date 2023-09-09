@@ -1,7 +1,5 @@
 package helloerniebot.controller.entity;
 
-import helloerniebot.handler.Trace;
-
 public class ErnieBotControllerResponse {
 
     public String answerText;
@@ -10,7 +8,7 @@ public class ErnieBotControllerResponse {
 
     public Boolean isEnd;
 
-    public Trace trace;
+    public ErnieBotTrace trace;
 
     public Integer errorCode;
 

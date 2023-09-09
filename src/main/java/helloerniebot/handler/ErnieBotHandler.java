@@ -1,10 +1,7 @@
 package helloerniebot.handler;
 
-import java.time.Instant;
-
 import helloerniebot.common.HttpUtil;
 import helloerniebot.common.JsonUtil;
-import helloerniebot.controller.entity.ErnieBotControllerResponse;
 import helloerniebot.handler.entity.AnswerParcel;
 import helloerniebot.mapper.entity.ErnieBotAccessTokenResponse;
 import helloerniebot.mapper.entity.ErnieBotRequest;
@@ -48,7 +45,7 @@ public class ErnieBotHandler {
         this.messageManager = messageManager;
     }
 
-    public void execute(ErnieBotHandlerContext context) {
+    public Flux<AnswerParcel> execute(ErnieBotHandlerContext context) {
         if (accessToken == null) {
             accessToken = doRequestAccessToken();
         }
@@ -60,23 +57,11 @@ public class ErnieBotHandler {
         ernieBotRequest.messages = context.messages;
         ernieBotRequest.stream = true;
 
-        Flux<AnswerParcel> answerFlux = Flux.create(emitter -> {
-            ErnieBotFluxTransformer transformer = new ErnieBotFluxTransformer(emitter, context, messageManager, padConfig);
+        return Flux.create(emitter -> {
+            ErnieBotFluxTransformer transformer = new ErnieBotFluxTransformer(emitter, context, ernieBotRequest, messageManager, padConfig);
             Flux<ErnieBotResponse> rawResponseFlux = doRequest(context, ernieBotRequest);
             rawResponseFlux.subscribe(transformer);
             emitter.onDispose(transformer);
-        });
-
-        context.responseFlux = answerFlux.mapNotNull(answerParcel -> {
-            if (answerParcel == null) {
-                return null;
-            }
-            ErnieBotControllerResponse response = new ErnieBotControllerResponse();
-            response.answerText = answerParcel.answerText;
-            response.isPad = answerParcel.isPad;
-            response.isEnd = answerParcel.isEnd;
-            response.trace = buildTrace(context, answerParcel, ernieBotRequest);
-            return response;
         });
     }
 
@@ -103,22 +88,5 @@ public class ErnieBotHandler {
                     log.error("error", e);
                     throw new RuntimeException("error", e);
                 });
-    }
-
-    private Trace buildTrace(ErnieBotHandlerContext context, AnswerParcel answer, ErnieBotRequest req) {
-        Trace trace = new Trace();
-
-        trace.elapsed = context.elapsed();
-        if (context.lastTime != null) {
-            trace.elapsedSinceLast = Instant.now().toEpochMilli() - context.lastTime.toEpochMilli();
-        }
-        context.lastTime = Instant.now();
-
-        trace.ernieBot = answer.trace;
-        if (answer.index != null && answer.index == 0) {
-            trace.ernieBot.rawRequest = req;
-        }
-
-        return trace;
     }
 }

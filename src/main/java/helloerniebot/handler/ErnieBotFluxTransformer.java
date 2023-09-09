@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import helloerniebot.common.JsonUtil;
 import helloerniebot.handler.entity.AnswerParcel;
+import helloerniebot.mapper.entity.ErnieBotRequest;
 import helloerniebot.mapper.entity.ErnieBotResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
@@ -16,6 +17,7 @@ public class ErnieBotFluxTransformer implements Subscriber<ErnieBotResponse>, Di
 
     private final FluxSink<AnswerParcel> emitter;
     private final ErnieBotHandlerContext context;
+    private final ErnieBotRequest req;
     private final ErnieBotMessageManager ernieBotMessageManager;
     private final AnswerFluxPadder padder;
 
@@ -25,9 +27,10 @@ public class ErnieBotFluxTransformer implements Subscriber<ErnieBotResponse>, Di
 
     private final StringBuffer answerBuffer = new StringBuffer();
 
-    public ErnieBotFluxTransformer(FluxSink<AnswerParcel> emitter, ErnieBotHandlerContext context, ErnieBotMessageManager ernieBotMessageManager, AnswerFluxPadder.Config padConfig) {
+    public ErnieBotFluxTransformer(FluxSink<AnswerParcel> emitter, ErnieBotHandlerContext context, ErnieBotRequest req, ErnieBotMessageManager ernieBotMessageManager, AnswerFluxPadder.Config padConfig) {
         this.emitter = emitter;
         this.context = context;
+        this.req = req;
         this.ernieBotMessageManager = ernieBotMessageManager;
         this.padder = padConfig == null ? null : new AnswerFluxPadder(emitter, padConfig);
     }
@@ -65,6 +68,9 @@ public class ErnieBotFluxTransformer implements Subscriber<ErnieBotResponse>, Di
         answerParcel.index = resp.sentence_id;
         answerParcel.isEnd = (resp.is_end != null && !resp.is_end) ? null : resp.is_end;
         answerParcel.trace = new ProxyTrace();
+        if (answerParcel.index != null && answerParcel.index == 0) {
+            answerParcel.trace.rawRequest = req;
+        }
         answerParcel.trace.rawResponse = resp;
         answerParcel.trace.rawLatency = Instant.now().toEpochMilli() - startTime.toEpochMilli();
         return answerParcel;
