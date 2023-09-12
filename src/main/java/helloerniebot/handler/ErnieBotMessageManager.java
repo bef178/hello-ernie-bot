@@ -47,7 +47,7 @@ public class ErnieBotMessageManager {
 
         List<ErnieBotMessage> history = context.messages;
 
-        if (message == null || message.getRole() == null) {
+        if (message == null || message.role == null) {
             return;
         }
 
@@ -58,23 +58,23 @@ public class ErnieBotMessageManager {
 
         if (last == null) {
             history.add(message);
-        } else if (!Objects.equals(last.getRole(), message.getRole())) {
+        } else if (!Objects.equals(last.role, message.role)) {
             history.add(message);
         } else {
             history.clear();
-            if (Objects.equals(ROLE_USER, message.getRole())) {
+            if (Objects.equals(ROLE_USER, message.role)) {
                 history.add(message);
             }
         }
 
-        int numTokens = history.stream().map(a -> a.getContent().length()).reduce(Integer::sum).orElse(0);
+        int numTokens = history.stream().map(a -> a.content.length()).reduce(Integer::sum).orElse(0);
         while (numTokens > MAX_TOKENS) {
             for (int i = 0; i < 2; i++) {
                 if (history.isEmpty()) {
                     break;
                 }
                 ErnieBotMessage one = history.remove(0);
-                numTokens -= one.getContent().length();
+                numTokens -= one.content.length();
             }
         }
     }

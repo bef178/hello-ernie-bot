@@ -1,8 +1,5 @@
 package helloerniebot.mapper.entity;
 
-import lombok.Data;
-
-@Data
 public class ErnieBotUsage {
 
     public int prompt_tokens;
