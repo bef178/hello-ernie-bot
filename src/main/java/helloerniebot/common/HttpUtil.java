@@ -1,6 +1,6 @@
 package helloerniebot.common;
 
-import java.util.Scanner;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.channel.ChannelOption;
@@ -8,10 +8,15 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -26,18 +31,21 @@ public class HttpUtil {
 
     @SneakyThrows
     public static String httpGet(String url) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet(url);
-            CloseableHttpResponse response = httpClient.execute(request);
-
-            log.info("responseStatusLine: {}", response.getStatusLine());
-
-            StringBuilder sb = new StringBuilder();
-            Scanner scanner = new Scanner(response.getEntity().getContent());
-            while (scanner.hasNext()) {
-                sb.append(scanner.next());
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(Timeout.of(2000, TimeUnit.MILLISECONDS))
+                .setConnectionRequestTimeout(Timeout.of(5000, TimeUnit.MILLISECONDS))
+                .setResponseTimeout(Timeout.of(5000, TimeUnit.MILLISECONDS))
+                .build();
+        try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(config).build()) {
+            HttpGet httpGet = new HttpGet(url);
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                log.info("response: {}", response.getCode());
+                HttpEntity entity = response.getEntity();
+                return EntityUtils.toString(entity);
             }
-            return sb.toString();
+        } catch (IOException | ParseException e) {
+            log.error("", e);
+            return null;
         }
     }
 

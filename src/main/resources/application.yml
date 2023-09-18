@@ -25,4 +25,3 @@ upstream-service:
       next-words: "errr..."
       next-catch-delay: 1000
       next-catch-words: "后面我忘了"
-
